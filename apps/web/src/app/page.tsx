@@ -1,6 +1,16 @@
 import Image from "next/image";
+import { userSchema } from "shared/schemas/user";
 
 export default function Home() {
+  const result = userSchema.safeParse({
+    id: "test",
+    name: "Lau",
+    email: "lau@example.com",
+  });
+
+  console.log(result);
+  console.log(result?.success ? "Valid user" : result.error.issues[0].message);
+
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
