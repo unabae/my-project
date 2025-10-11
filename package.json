@@ -1,0 +1,21 @@
+{
+  "name": "my-project",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "turbo": "^2.5.8"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "packageManager": "bun@1.2.0"
+}
