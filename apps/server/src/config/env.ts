@@ -4,4 +4,5 @@ import { config } from "dotenv";
 
 config({ path: `.env.${process.env.NODE_ENV || "development"}.local` });
 
-export const { PORT, NODE_ENV, DATABASE_URL, FRONTEND_URL } = process.env;
+export const { PORT, NODE_ENV, DATABASE_URL, FRONTEND_URL, RESEND_API_KEY } =
+  process.env;

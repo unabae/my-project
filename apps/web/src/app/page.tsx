@@ -3,7 +3,7 @@ import { userSchema } from "shared/schemas/user";
 
 export default function Home() {
   const result = userSchema.safeParse({
-    id: "test",
+    id: 1,
     name: "Lau",
     email: "lau@example.com",
   });
