@@ -5,6 +5,7 @@ import { openAPI } from "better-auth/plugins";
 import { sendEmail } from "../emails/send-email";
 import { EmailTemplate } from "../emails/email-template";
 import * as authSchema from "../schema/auth-schema";
+import { FRONTEND_URL } from "../config/env";
 
 // Configure better-auth with Drizzle adapter and email/password provider
 
@@ -27,5 +28,6 @@ export const auth = betterAuth({
       });
     },
   },
+  trustedOrigins: [FRONTEND_URL || "http://localhost:3001"],
   plugins: [openAPI()],
 });
