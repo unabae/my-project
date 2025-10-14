@@ -22,6 +22,14 @@ export default function Home() {
           height={38}
           priority
         />
+        {/* <iframe
+          width="480"
+          height="270"
+          src="//www.youtube.com/embed/tOYvUR9XjMk"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+        ></iframe> */}
         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{" "}
