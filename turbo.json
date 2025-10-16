@@ -5,6 +5,10 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
+    "server#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     "check-types": {
       "dependsOn": ["^check-types"]
     },
