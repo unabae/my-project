@@ -1,30 +1,29 @@
 import { Hono } from "hono";
-import { logger } from "hono/logger";
-import { cors } from "hono/cors";
 import { authRoutes } from "./routes/auth";
-import { FRONTEND_URL } from "./config/env";
+import { corsMiddleware } from "./middleware/corsMiddleware";
+import { loggerMiddleware } from "./middleware/loggerMiddleware";
+import { sessionMiddleware } from "./middleware/sessionMiddleware";
+import type { AppType } from "./types/appTypes";
 
-// Combines everything - Hono instance, middlewares, and routes.
+/* 
+Combines everything - Hono instance, middlewares, and routes.
+*/
 
-// Create Hono app
-const app = new Hono();
+// Create Hono app with typed variables for session and user
+const app = new Hono<AppType>();
 
-//Allow frontend to access server
-app.use(
-  "*",
-  cors({
-    origin: `${FRONTEND_URL}`,
-    credentials: true,
-  })
-);
-
-// Set up logger
-app.use("*", logger());
+// Middlewares
+app.use("*", corsMiddleware); //Allow frontend to access server
+app.use("*", loggerMiddleware); // Set up logger
+app.use("*", sessionMiddleware); // Session middleware - retrieves and sets session in context (needed for better-auth)
 
 // Routes
 app.route("/", authRoutes);
 
 // Basic route for testing
 app.get("/", (c) => c.text("Hello from Hono + Bun!"));
+app.get("/api/error-test", (c) => {
+  return c.json({ message: "Simulated server error for testing" }, 201);
+});
 
 export default app;

@@ -8,7 +8,6 @@ import * as authSchema from "../schema/auth-schema";
 import { FRONTEND_URL } from "../config/env";
 
 // Configure better-auth with Drizzle adapter and email/password provider
-
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg", // or "mysql", "sqlite"
@@ -16,7 +15,13 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
+    // requireEmailVerification: true,
+  },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60, // 1 minute
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -29,5 +34,5 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: [FRONTEND_URL || "http://localhost:3001"],
-  plugins: [openAPI()],
+  plugins: [openAPI()], // nextCookies()
 });
