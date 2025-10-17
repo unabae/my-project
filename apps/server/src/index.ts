@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { authRoutes } from "./routes/auth";
 import { corsMiddleware } from "./middleware/corsMiddleware";
 import { loggerMiddleware } from "./middleware/loggerMiddleware";
 import { sessionMiddleware } from "./middleware/sessionMiddleware";
+import { authRoutes } from "./routes/auth";
 import type { AppType } from "./types/appTypes";
 
 /* 
@@ -19,6 +19,7 @@ app.use("*", sessionMiddleware); // Session middleware - retrieves and sets sess
 
 // Routes
 app.route("/", authRoutes);
+// Note: WebSocket handling is done in server.ts at the Bun server level
 
 // Basic route for testing
 app.get("/", (c) => c.text("Hello from Hono + Bun!"));

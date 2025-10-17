@@ -4,7 +4,7 @@ import { useSession } from "@/hooks/useAuth";
 import Loading from "@/components/Loading";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const { session, isLoading, error } = useSession();
+  const { isLoading, error } = useSession();
 
   if (isLoading) {
     return <Loading />;
