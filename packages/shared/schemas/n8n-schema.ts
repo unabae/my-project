@@ -24,6 +24,11 @@ export const n8nTestSchema = z.object({
     .refine((value) => !Number.isNaN(Date.parse(value)), {
       message: "Please select a valid date",
     }),
+  scheduledTime: z
+    .enum(["00:00", "05:00", "07:00"], {
+      error: "Please select a valid publishing time",
+    })
+    .optional(),
 });
 
 export type N8nTestRequest = z.infer<typeof n8nTestSchema>;

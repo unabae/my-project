@@ -1,9 +1,15 @@
 import axios from "axios";
 
 declare module "axios" {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   interface AxiosError<T = unknown, D = any> {
     validationErrors?: Record<string, string[]>;
     displayMessage?: string;
+    /** @internal Keeps the generic parameters referenced for lint rules. */
+    readonly __meta?: {
+      response?: T;
+      request?: D;
+    };
   }
 }
 
@@ -57,16 +63,17 @@ axiosClient.interceptors.response.use(
 
       if (validationErrors?.length > 0) {
         // Transform array of errors into field-based object
-        const formattedErrors: Record<string, string[]> = validationErrors.reduce(
-          (acc: Record<string, string[]>, curr: ValidationError) => {
-            if (!acc[curr.field]) {
-              acc[curr.field] = [];
-            }
-            acc[curr.field].push(curr.message);
-            return acc;
-          },
-          {}
-        );
+        const formattedErrors: Record<string, string[]> =
+          validationErrors.reduce(
+            (acc: Record<string, string[]>, curr: ValidationError) => {
+              if (!acc[curr.field]) {
+                acc[curr.field] = [];
+              }
+              acc[curr.field].push(curr.message);
+              return acc;
+            },
+            {}
+          );
 
         // Extend the error object with formatted validation errors
         error.validationErrors = formattedErrors;

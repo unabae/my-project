@@ -23,14 +23,18 @@ export const postN8nTest = async (c: Context<AppType>) => {
       );
     }
 
-    const { tiktokLink, videoDescription, scheduledDate } =
+    const { tiktokLink, videoDescription, scheduledDate, scheduledTime } =
       validationResult.data;
+
+    const scheduledDateTime = scheduledTime
+      ? new Date(`${scheduledDate}T${scheduledTime}:00`)
+      : new Date(scheduledDate);
 
     const payload = {
       tiktokLink,
       videoDescription,
       triggeredAt: new Date().toISOString(),
-      scheduledDate: new Date(scheduledDate).toISOString(),
+      scheduledDate: scheduledDateTime.toISOString(),
     };
 
     const session = c.get("session");

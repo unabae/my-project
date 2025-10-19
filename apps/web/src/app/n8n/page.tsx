@@ -20,11 +20,12 @@
     - Extend this page when you need richer debugging aids (headers, timing, etc.).
 */
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useApiMutation } from "../../hooks/useApi";
 import { Input } from "@/components/ui/input";
 import { formatValidationErrors } from "@/lib/validation-utils";
 import { AxiosError } from "axios";
+import { Button } from "@/components/ui/button";
 
 type N8nTriggerResponse = {
   ok: boolean;
@@ -41,6 +42,7 @@ type N8nTriggerPayload = {
   tiktokLink: string;
   videoDescription: string;
   scheduledDate: string;
+  scheduledTime?: "00:00" | "05:00" | "07:00";
 };
 
 type N8nWorkflowItem = {
@@ -70,10 +72,31 @@ type EditableOutput = {
   tags: string;
 };
 
+const getWorkflowEntry = (payload: unknown): N8nWorkflowItem | undefined => {
+  if (Array.isArray(payload)) {
+    return (payload[0] as N8nWorkflowItem) ?? undefined;
+  }
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    return payload as N8nWorkflowItem;
+  }
+  return undefined;
+};
+
+const toEditableOutput = (
+  output?: N8nWorkflowItem["output"]
+): EditableOutput => ({
+  title: output?.title ?? "",
+  description: output?.description ?? "",
+  tags: output?.tags ?? "",
+});
+
 export default function N8nTestPage() {
   const [tiktokLink, setTiktokLink] = useState<string>("");
   const [videoDescription, setVideoDescription] = useState<string>("");
   const [scheduledDate, setScheduledDate] = useState<string>("");
+  const [scheduledTime, setScheduledTime] = useState<
+    "00:00" | "05:00" | "07:00"
+  >("00:00");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   const mutation = useApiMutation<N8nTriggerResponse, N8nTriggerPayload>(
@@ -81,21 +104,12 @@ export default function N8nTestPage() {
   );
   const axiosError = mutation.error as AxiosError | undefined;
   const workflowPayload = mutation.data?.data;
-  const workflowEntry = Array.isArray(workflowPayload)
-    ? (workflowPayload[0] as N8nWorkflowItem) ?? undefined
-    : workflowPayload &&
-      typeof workflowPayload === "object" &&
-      !Array.isArray(workflowPayload)
-    ? (workflowPayload as N8nWorkflowItem)
-    : undefined;
+  const workflowEntry = getWorkflowEntry(workflowPayload);
   const resumeUrl = mutation.data?.resumeUrl ?? workflowEntry?.resumeUrl;
-  const defaultOutput = workflowEntry?.output;
 
-  const [editableOutput, setEditableOutput] = useState<EditableOutput>({
-    title: "",
-    description: "",
-    tags: "",
-  });
+  const [editableOutput, setEditableOutput] = useState<EditableOutput>(
+    toEditableOutput(workflowEntry?.output)
+  );
   const [resumeStatus, setResumeStatus] = useState<
     "idle" | "pending" | "success" | "error"
   >("idle");
@@ -106,35 +120,19 @@ export default function N8nTestPage() {
     ResumePayload
   >("/api/n8n/resume");
 
-  useEffect(() => {
-    if (!mutation.isSuccess) {
-      return;
-    }
-
-    const output = defaultOutput ?? {};
-    setEditableOutput({
-      title: output.title ?? "",
-      description: output.description ?? "",
-      tags: output.tags ?? "",
-    });
-    setResumeStatus("idle");
-    setResumeError(null);
-  }, [
-    mutation.isSuccess,
-    defaultOutput?.title,
-    defaultOutput?.description,
-    defaultOutput?.tags,
-  ]);
-
   const isPosting = resumeStatus === "pending" || resumeMutation.isPending;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({}); // Clear previous errors
     mutation.mutate(
-      { tiktokLink, videoDescription, scheduledDate },
+      { tiktokLink, videoDescription, scheduledDate, scheduledTime },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          const entry = getWorkflowEntry(response.data);
+          setEditableOutput(toEditableOutput(entry?.output));
+          setResumeStatus("idle");
+          setResumeError(null);
           // setTiktokLink("");
           // setVideoDescription("");
           // setScheduledDate("");
@@ -242,19 +240,51 @@ export default function N8nTestPage() {
             {error}
           </p>
         ))}
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium">
+            Preferred Publish Time
+          </legend>
+          <div className="flex flex-wrap gap-4">
+            {[
+              { label: "12:00 AM", value: "00:00" as const },
+              { label: "5:00 AM", value: "05:00" as const },
+              { label: "7:00 AM", value: "07:00" as const },
+            ].map((option) => (
+              <label
+                key={option.value}
+                className="inline-flex items-center gap-2 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="scheduledTime"
+                  value={option.value}
+                  checked={scheduledTime === option.value}
+                  onChange={() => setScheduledTime(option.value)}
+                  className="h-4 w-4 border border-input text-primary focus:ring-2 focus:ring-primary/20"
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        {errors.scheduledTime?.map((error, index) => (
+          <p key={index} className="text-red-500 text-sm">
+            {error}
+          </p>
+        ))}
 
-        <button
+        <Button
           type="submit"
-          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center justify-center cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Calling n8n..." : "Trigger n8n Webhook"}
-        </button>
+          {mutation.isPending ? "Calling n8n..." : "Generate Video Details"}
+        </Button>
       </form>
 
       <section className="rounded-lg border border-border p-4 text-sm">
         <h2 className="mb-2 font-medium">Result</h2>
-        {mutation.isIdle && <p>Waiting for a trigger.</p>}
+        {mutation.isIdle && <p>Waiting for your submission</p>}
         {mutation.isPending && <p>Sending request...</p>}
         {mutation.isSuccess && (
           <>
@@ -326,23 +356,23 @@ export default function N8nTestPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => handleResume(resumeUrl, editableOutput)}
-                  className="inline-flex items-center rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full inline-flex items-center rounded bg-primary px-3 py-1 text-md text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                   disabled={!resumeUrl || isPosting}
                 >
                   {isPosting ? "Posting..." : "Post to Resume URL"}
-                </button>
+                </Button>
               </div>
 
               {resumeStatus === "success" && (
-                <p className="text-xs text-emerald-600">
-                  Resume request sent successfully.
+                <p className="text-lg text-emerald-600">
+                  Successfully uploaded to Youtube.
                 </p>
               )}
               {resumeStatus === "error" && resumeError && (
-                <p className="text-xs text-destructive">{resumeError}</p>
+                <p className="text-lg text-destructive">{resumeError}</p>
               )}
             </div>
             {/* <div className="space-y-2">
