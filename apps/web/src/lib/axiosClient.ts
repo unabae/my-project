@@ -1,5 +1,16 @@
 import axios from "axios";
 
+// Define error types
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ApiError {
+  validationErrors?: Record<string, string[]>;
+  message?: string;
+}
+
 // Create an Axios instance with default configuration
 export const axiosClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
@@ -34,9 +45,26 @@ axiosClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle global errors here
     if (error.response) {
-      console.error("Response error:", error.response);
+      const validationErrors = error.response.data.details;
+      
+      if (validationErrors?.length > 0) {
+        // Transform array of errors into field-based object
+        const formattedErrors: Record<string, string[]> = validationErrors.reduce(
+          (acc: Record<string, string[]>, curr: ValidationError) => {
+            if (!acc[curr.field]) {
+              acc[curr.field] = [];
+            }
+            acc[curr.field].push(curr.message);
+            return acc;
+          },
+          {}
+        );
+
+        // Extend the error object with formatted validation errors
+        error.validationErrors = formattedErrors;
+      }
+
       // You can handle specific status codes globally
       if (error.response.status === 401) {
         // e.g., redirect to login page

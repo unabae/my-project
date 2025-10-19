@@ -51,7 +51,7 @@ export function useApiQuery<T>(
  */
 interface UseApiMutationOptions<T> {
   onSuccess?: (data: T) => void;
-  onError?: (error: AxiosError) => void;
+  onError?: (error: AxiosError<{ error?: unknown }>) => void;
   invalidateKeys?: unknown[][];
 }
 
@@ -67,7 +67,7 @@ export function useApiMutation<T = unknown, V = unknown>(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation<T, AxiosError, V>({
+  return useMutation<T, AxiosError<{ error?: unknown }>, V>({
     mutationFn: async (data: V) => {
       let response;
       switch (method) {
@@ -93,7 +93,21 @@ export function useApiMutation<T = unknown, V = unknown>(
       });
       options?.onSuccess?.(data);
     },
-    onError: options?.onError,
+    onError: (error) => {
+      options?.onError?.(error);
+
+      // Optional helper: attach parsed error to error object
+      const axiosResponse = error.response;
+      const responseError = axiosResponse?.data?.error;
+
+      if (axiosResponse?.data && typeof responseError === "string") {
+        try {
+          axiosResponse.data.error = JSON.parse(responseError);
+        } catch {
+          // keep original string if parsing fails
+        }
+      }
+    },
   });
 }
 
