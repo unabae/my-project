@@ -7,11 +7,16 @@ import { SignInTab } from "./_components/sign-in-tab";
 import { SignUpTab } from "./_components/sign-up-tab";
 
 export default function LoginPage() {
-  // Line 10-17 to fix the hydration mismatch
+  // Use a more React-friendly approach for hydration mismatch prevention
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Use setTimeout to defer the state update to the next tick
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mounted) return null;

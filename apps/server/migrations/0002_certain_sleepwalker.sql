@@ -1,0 +1,1 @@
+ALTER TABLE "generated_video" ADD COLUMN "url" text NOT NULL;

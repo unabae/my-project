@@ -48,6 +48,7 @@ export const account = pgTable("account", {
     .notNull(),
 });
 
+
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),

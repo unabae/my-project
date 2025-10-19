@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { SignUpForm, signUpSchema } from "shared/index";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,11 +13,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 import { useSignUp } from "@/hooks/useAuth";
 
 export function SignUpTab() {
-  const [error, setError] = useState<string | null>(null);
   const handleSignUp = useSignUp();
 
   const form = useForm<SignUpForm>({
@@ -80,9 +77,9 @@ export function SignUpTab() {
   return (
     <Form {...form}>
       <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
-        {error && (
+        {handleSignUp.isError && (
           <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-            {error}
+            {handleSignUp.error?.message || "Sign up failed. Please try again."}
           </div>
         )}
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSignIn } from "@/hooks/useAuth";
-import { useTransition } from "react";
+// import { useTransition } from "react";
 
 // Sign-in only needs email and password
 const signInSchema = z.object({
@@ -27,9 +27,9 @@ const signInSchema = z.object({
 type SignInForm = z.infer<typeof signInSchema>;
 
 export function SignInTab() {
-  const router = useRouter();
+  // const router = useRouter();
   const signInMutation = useSignIn();
-  const [isPending, startTransition] = useTransition();
+  // const [isPending, startTransition] = useTransition();
 
   const form = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
@@ -104,7 +104,7 @@ export function SignInTab() {
         {/* <Button type="submit" disabled={signInMutation.isPending}>
           {signInMutation.isPending ? "Signing in..." : "Sign In"}
         </Button> */}
-        
+
         <Button type="submit" disabled={signInMutation.status === "pending"}>
           {signInMutation.status === "pending" ? "Signing in..." : "Sign In"}
         </Button>

@@ -1,5 +1,29 @@
 import axios from "axios";
 
+declare module "axios" {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  interface AxiosError<T = unknown, D = any> {
+    validationErrors?: Record<string, string[]>;
+    displayMessage?: string;
+    /** @internal Keeps the generic parameters referenced for lint rules. */
+    readonly __meta?: {
+      response?: T;
+      request?: D;
+    };
+  }
+}
+
+// Define error types
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ApiError {
+  validationErrors?: Record<string, string[]>;
+  message?: string;
+}
+
 // Create an Axios instance with default configuration
 export const axiosClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
@@ -34,9 +58,43 @@ axiosClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle global errors here
     if (error.response) {
-      console.error("Response error:", error.response);
+      const validationErrors = error.response.data.details;
+
+      if (validationErrors?.length > 0) {
+        // Transform array of errors into field-based object
+        const formattedErrors: Record<string, string[]> =
+          validationErrors.reduce(
+            (acc: Record<string, string[]>, curr: ValidationError) => {
+              if (!acc[curr.field]) {
+                acc[curr.field] = [];
+              }
+              acc[curr.field].push(curr.message);
+              return acc;
+            },
+            {}
+          );
+
+        // Extend the error object with formatted validation errors
+        error.validationErrors = formattedErrors;
+      }
+
+      const rawServerError = error.response.data?.error;
+      if (rawServerError !== undefined) {
+        error.displayMessage =
+          typeof rawServerError === "string"
+            ? rawServerError
+            : (() => {
+                try {
+                  return JSON.stringify(rawServerError, null, 2);
+                } catch {
+                  return String(rawServerError);
+                }
+              })();
+      } else if (!error.displayMessage) {
+        error.displayMessage = error.message;
+      }
+
       // You can handle specific status codes globally
       if (error.response.status === 401) {
         // e.g., redirect to login page

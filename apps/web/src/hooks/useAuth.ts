@@ -86,7 +86,7 @@ export function useSignIn() {
 }
 
 export function useSignOut() {
-  const router = useRouter();
+  // const router = useRouter();
 
   return useApiMutation<unknown, void>("/api/auth/sign-out", "POST", {
     invalidateKeys: [["session"]], // Invalidate session cache to refetch
