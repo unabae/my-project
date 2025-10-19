@@ -17,8 +17,30 @@ export const n8nTestSchema = z.object({
   videoDescription: z
     .string()
     .min(1, "Video description is required")
-    .min(10, "Video description must be at least 10 characters long")
     .max(500, "Video description must be less than 500 characters"),
+  scheduledDate: z
+    .string()
+    .min(1, "Scheduled date is required")
+    .refine((value) => !Number.isNaN(Date.parse(value)), {
+      message: "Please select a valid date",
+    }),
 });
 
 export type N8nTestRequest = z.infer<typeof n8nTestSchema>;
+
+export const n8nResumeSchema = z.object({
+  resumeUrl: z
+    .string()
+    .url("Resume URL must be a valid URL")
+    .min(1, "Resume URL is required"),
+  payload: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      tags: z.string().optional(),
+    })
+    .optional()
+    .default({}),
+});
+
+export type N8nResumeRequest = z.infer<typeof n8nResumeSchema>;

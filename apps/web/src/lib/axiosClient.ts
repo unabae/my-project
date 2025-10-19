@@ -1,5 +1,12 @@
 import axios from "axios";
 
+declare module "axios" {
+  interface AxiosError<T = unknown, D = any> {
+    validationErrors?: Record<string, string[]>;
+    displayMessage?: string;
+  }
+}
+
 // Define error types
 export interface ValidationError {
   field: string;
@@ -47,7 +54,7 @@ axiosClient.interceptors.response.use(
   (error) => {
     if (error.response) {
       const validationErrors = error.response.data.details;
-      
+
       if (validationErrors?.length > 0) {
         // Transform array of errors into field-based object
         const formattedErrors: Record<string, string[]> = validationErrors.reduce(
@@ -63,6 +70,22 @@ axiosClient.interceptors.response.use(
 
         // Extend the error object with formatted validation errors
         error.validationErrors = formattedErrors;
+      }
+
+      const rawServerError = error.response.data?.error;
+      if (rawServerError !== undefined) {
+        error.displayMessage =
+          typeof rawServerError === "string"
+            ? rawServerError
+            : (() => {
+                try {
+                  return JSON.stringify(rawServerError, null, 2);
+                } catch {
+                  return String(rawServerError);
+                }
+              })();
+      } else if (!error.displayMessage) {
+        error.displayMessage = error.message;
       }
 
       // You can handle specific status codes globally
