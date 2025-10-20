@@ -8,7 +8,10 @@
 // WEBSOCKET CONFIGURATION
 // ============================================================================
 
-export const WEBSOCKET_URL = "ws://localhost:3000/ws";
+const DEFAULT_WS_URL = "ws://localhost:3000/ws";
+
+export const WEBSOCKET_URL =
+  process.env.NEXT_PUBLIC_WS_URL ?? DEFAULT_WS_URL;
 
 // ============================================================================
 // UI CONFIGURATION
