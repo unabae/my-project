@@ -40,7 +40,7 @@ export const postN8nTest = async (c: Context<AppType>) => {
     const session = c.get("session");
 
     const data = await callN8nWebhook(
-      "webhook-test/1ff0ba3d-a75b-4b02-855c-34cd5f2c0672",
+      "webhook/1ff0ba3d-a75b-4b02-855c-34cd5f2c0672",
       payload,
       {
         tokenPayload: {
@@ -117,16 +117,12 @@ export const postN8nResume = async (c: Context<AppType>) => {
     const pathWithSearch = `${targetUrl.pathname}${targetUrl.search}`;
     const session = c.get("session");
 
-    const data = await callN8nWebhook(
-      pathWithSearch,
-      payload ?? {},
-      {
-        tokenPayload: {
-          sessionId: session?.id,
-          userId: session?.userId,
-        },
-      }
-    );
+    const data = await callN8nWebhook(pathWithSearch, payload ?? {}, {
+      tokenPayload: {
+        sessionId: session?.id,
+        userId: session?.userId,
+      },
+    });
 
     return c.json({ ok: true, data });
   } catch (error) {
