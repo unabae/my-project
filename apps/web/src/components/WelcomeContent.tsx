@@ -35,6 +35,11 @@ export function WelcomeContent() {
           <h1 className="text-3xl font-bold">
             Welcome {session.user?.name || "back"}!
           </h1>
+          <div>
+            <Button asChild size="lg">
+              <Link href="/n8n">Tiktok - Youtube</Link>
+            </Button>
+          </div>
           <Button size="lg" variant="destructive" onClick={handleSignOut}>
             Sign Out
           </Button>

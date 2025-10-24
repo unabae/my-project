@@ -72,6 +72,7 @@ type EditableOutput = {
   tags: string;
 };
 
+// Normalize the workflow response regardless of whether n8n returned an array or single object.
 const getWorkflowEntry = (payload: unknown): N8nWorkflowItem | undefined => {
   if (Array.isArray(payload)) {
     return (payload[0] as N8nWorkflowItem) ?? undefined;
@@ -82,6 +83,7 @@ const getWorkflowEntry = (payload: unknown): N8nWorkflowItem | undefined => {
   return undefined;
 };
 
+// Prepare a user-editable snapshot of the generated metadata, defaulting blank fields.
 const toEditableOutput = (
   output?: N8nWorkflowItem["output"]
 ): EditableOutput => ({
@@ -99,6 +101,7 @@ export default function N8nTestPage() {
   >("00:00");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
+  // Mutation encapsulates the POST to our Bun bridge that triggers the n8n workflow.
   const mutation = useApiMutation<N8nTriggerResponse, N8nTriggerPayload>(
     "/api/n8n/test"
   );
@@ -115,6 +118,7 @@ export default function N8nTestPage() {
   >("idle");
   const [resumeError, setResumeError] = useState<string | null>(null);
 
+  // Separate mutation hits the resume endpoint that pushes edits back to n8n.
   const resumeMutation = useApiMutation<
     { ok: boolean; data?: unknown },
     ResumePayload
@@ -125,10 +129,12 @@ export default function N8nTestPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({}); // Clear previous errors
+    // Send the form values to the workflow trigger and reconcile the UI with the reply.
     mutation.mutate(
       { tiktokLink, videoDescription, scheduledDate, scheduledTime },
       {
         onSuccess: (response) => {
+          // Persist the freshly generated metadata so the user can refine it.
           const entry = getWorkflowEntry(response.data);
           setEditableOutput(toEditableOutput(entry?.output));
           setResumeStatus("idle");
@@ -157,6 +163,7 @@ export default function N8nTestPage() {
     setResumeStatus("pending");
     setResumeError(null);
 
+    // Only persist fields that the user actually filled out; omit empty strings.
     const payload: ResumePayload["payload"] =
       output && (output.title || output.description || output.tags)
         ? {
@@ -166,6 +173,7 @@ export default function N8nTestPage() {
           }
         : {};
 
+    // Forward the edited payload to the resume webhook so n8n can continue the workflow.
     resumeMutation.mutate(
       {
         resumeUrl: url,
@@ -176,6 +184,7 @@ export default function N8nTestPage() {
           setResumeStatus("success");
         },
         onError: (error) => {
+          // Surface the server's error message when possible; fall back to Axios defaults.
           setResumeStatus("error");
           const message =
             error.displayMessage ??
@@ -194,6 +203,7 @@ export default function N8nTestPage() {
         <h1 className="text-2xl font-semibold">Tiktok Downloader - Youtube</h1>
       </header>
 
+      {/* Form collects the parameters required to trigger the n8n workflow */}
       <form
         onSubmit={handleSubmit}
         className="flex flex-col gap-4 rounded-lg border border-border p-6 shadow-sm"
@@ -282,6 +292,7 @@ export default function N8nTestPage() {
         </Button>
       </form>
 
+      {/* Result panel reflects the current mutation and resume status */}
       <section className="rounded-lg border border-border p-4 text-sm">
         <h2 className="mb-2 font-medium">Result</h2>
         {mutation.isIdle && <p>Waiting for your submission</p>}
@@ -362,7 +373,7 @@ export default function N8nTestPage() {
                   className="w-full inline-flex items-center rounded bg-primary px-3 py-1 text-md text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                   disabled={!resumeUrl || isPosting}
                 >
-                  {isPosting ? "Posting..." : "Post to Resume URL"}
+                  {isPosting ? "Posting..." : "Post to Youtube"}
                 </Button>
               </div>
 
